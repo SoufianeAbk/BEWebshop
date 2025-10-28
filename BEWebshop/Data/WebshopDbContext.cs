@@ -12,14 +12,10 @@ namespace BEWebshop.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // Configure your database connection here
-            // Example for SQL Server:
-            // optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=BEWebshopDb;Trusted_Connection=True;");
-
-            // Example for SQLite (good for development):
+            // Configure SQLite database
             optionsBuilder.UseSqlite("Data Source=webshop.db");
 
-            // Enable lazy loading if needed
+            // Enable lazy loading
             optionsBuilder.UseLazyLoadingProxies();
         }
 
@@ -88,26 +84,8 @@ namespace BEWebshop.Data
                 entity.HasIndex(e => e.OrderId);
             });
 
-            // Seed initial data (optional)
-            SeedData(modelBuilder);
-        }
-
-        private void SeedData(ModelBuilder modelBuilder)
-        {
-            // Seed Categories
-            modelBuilder.Entity<Category>().HasData(
-                new Category { Id = 1, Name = "Electronics", Description = "Electronic devices and gadgets" },
-                new Category { Id = 2, Name = "Books", Description = "Books and publications" },
-                new Category { Id = 3, Name = "Clothing", Description = "Apparel and accessories" }
-            );
-
-            // Seed Products
-            modelBuilder.Entity<Product>().HasData(
-                new Product { Id = 1, Name = "Laptop", Description = "High-performance laptop", Price = 999.99m, Stock = 10, CategoryId = 1 },
-                new Product { Id = 2, Name = "Smartphone", Description = "Latest smartphone model", Price = 699.99m, Stock = 25, CategoryId = 1 },
-                new Product { Id = 3, Name = "C# Programming Book", Description = "Comprehensive C# guide", Price = 49.99m, Stock = 50, CategoryId = 2 },
-                new Product { Id = 4, Name = "T-Shirt", Description = "Cotton t-shirt", Price = 19.99m, Stock = 100, CategoryId = 3 }
-            );
+            // NOTE: Seed data is now handled by DatabaseInitializer.Initialize()
+            // This prevents issues with duplicate data and provides better control
         }
     }
 }

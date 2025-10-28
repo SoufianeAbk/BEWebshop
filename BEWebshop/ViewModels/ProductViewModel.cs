@@ -30,8 +30,8 @@ namespace BEWebshop.ViewModels
             SearchCommand = new RelayCommand(async _ => await SearchProductsAsync());
             FilterByCategoryCommand = new RelayCommand(async _ => await FilterByCategoryAsync());
 
-            _ = LoadCategoriesAsync();
-            _ = LoadProductsAsync();
+            // Load data synchronously to ensure it's available when view is shown
+            LoadInitialData();
         }
 
         public ObservableCollection<Product> Products
@@ -70,16 +70,40 @@ namespace BEWebshop.ViewModels
         public ICommand SearchCommand { get; }
         public ICommand FilterByCategoryCommand { get; }
 
-        private async Task LoadProductsAsync()
+        private async void LoadInitialData()
+        {
+            try
+            {
+                await LoadCategoriesAsync();
+                await LoadProductsAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading initial data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public async Task LoadProductsAsync()
         {
             try
             {
                 var products = await _productController.GetAllProductsAsync();
+
+                if (products == null || products.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No products found in the database. The database may not be properly initialized.",
+                        "Information",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+
                 Products = new ObservableCollection<Product>(products);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading products: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading products: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -88,11 +112,32 @@ namespace BEWebshop.ViewModels
             try
             {
                 var categories = await _categoryController.GetAllCategoriesAsync();
-                Categories = new ObservableCollection<Category>(categories);
+
+                // Create a new list with "All Categories" option at the beginning
+                var categoriesWithAll = new List<Category>
+                {
+                    new Category { Id = 0, Name = "All Categories", Description = "Show all products" }
+                };
+                categoriesWithAll.AddRange(categories);
+
+                Categories = new ObservableCollection<Category>(categoriesWithAll);
+
+                // Set default selection to "All Categories"
+                SelectedCategoryId = 0;
+
+                if (categories == null || categories.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No categories found in the database. The database may not be properly initialized.",
+                        "Information",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading categories: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading categories: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -102,19 +147,29 @@ namespace BEWebshop.ViewModels
 
             try
             {
+                if (SelectedProduct.Stock <= 0)
+                {
+                    MessageBox.Show($"{SelectedProduct.Name} is out of stock.", "Out of Stock",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 var result = await _cartController.AddToCartAsync(SelectedProduct.Id, 1);
                 if (result != null)
                 {
-                    MessageBox.Show($"{SelectedProduct.Name} added to cart!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"{SelectedProduct.Name} added to cart!", "Success",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Could not add product to cart. Please check stock availability.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Could not add product to cart. Please check stock availability.", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error adding to cart: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error adding to cart: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -130,10 +185,17 @@ namespace BEWebshop.ViewModels
             {
                 var products = await _productController.SearchProductsAsync(SearchText);
                 Products = new ObservableCollection<Product>(products);
+
+                if (products.Count == 0)
+                {
+                    MessageBox.Show($"No products found matching '{SearchText}'.", "Search Results",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error searching products: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error searching products: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -141,6 +203,7 @@ namespace BEWebshop.ViewModels
         {
             if (SelectedCategoryId == 0)
             {
+                // Show all products
                 await LoadProductsAsync();
                 return;
             }
@@ -149,10 +212,18 @@ namespace BEWebshop.ViewModels
             {
                 var products = await _productController.GetProductsByCategoryAsync(SelectedCategoryId);
                 Products = new ObservableCollection<Product>(products);
+
+                if (products.Count == 0)
+                {
+                    var categoryName = Categories.FirstOrDefault(c => c.Id == SelectedCategoryId)?.Name ?? "Unknown";
+                    MessageBox.Show($"No products found in category '{categoryName}'.", "Filter Results",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error filtering products: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error filtering products: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
