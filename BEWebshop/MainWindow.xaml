@@ -4,9 +4,64 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BEWebshop"
+        xmlns:views="clr-namespace:BEWebshop.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="BE Webshop" Height="600" Width="1000" WindowStartupLocation="CenterScreen">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
+        <!-- Navigation Bar -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Products" Command="{Binding NavigateToProductsCommand}" 
+                        Width="120" Height="35" Margin="5"
+                        Background="{Binding CurrentView, Converter={StaticResource ViewToColorConverter}, ConverterParameter=Products}"/>
+                <Button Content="Shopping Cart" Command="{Binding NavigateToCartCommand}" 
+                        Width="120" Height="35" Margin="5"
+                        Background="{Binding CurrentView, Converter={StaticResource ViewToColorConverter}, ConverterParameter=Cart}"/>
+                <Button Content="Orders" Command="{Binding NavigateToOrdersCommand}" 
+                        Width="120" Height="35" Margin="5"
+                        Background="{Binding CurrentView, Converter={StaticResource ViewToColorConverter}, ConverterParameter=Orders}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content Area -->
+        <ContentControl Grid.Row="1">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CurrentView}" Value="Products">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <views:ProductView DataContext="{Binding ProductViewModel}"/>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentView}" Value="Cart">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <views:CartView DataContext="{Binding CartViewModel}"/>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentView}" Value="Orders">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <views:OrderView DataContext="{Binding OrderViewModel}"/>
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
     </Grid>
+
+    <Window.Resources>
+        <!-- Simple Converter for button highlighting -->
+        <local:ViewToColorConverter x:Key="ViewToColorConverter"/>
+    </Window.Resources>
 </Window>
