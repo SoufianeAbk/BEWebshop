@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BEWebshop.Models
 {
-    internal class Order
+    public class Order
     {
         [Key]
         public int Id { get; set; }
