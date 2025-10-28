@@ -2,6 +2,7 @@
 using System.Data;
 using System.Windows;
 
+
 namespace BEWebshop
 {
     /// <summary>
@@ -9,6 +10,12 @@ namespace BEWebshop
     /// </summary>
     public partial class App : Application
     {
-    }
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
 
+            // Initialize SQLite
+            SQLitePCL.Batteries.Init();
+        }
+    }
 }
