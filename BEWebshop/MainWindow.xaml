@@ -34,34 +34,48 @@
         </Border>
 
         <!-- Content Area -->
-        <ContentControl Grid.Row="1">
-            <ContentControl.Style>
-                <Style TargetType="ContentControl">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding CurrentView}" Value="Products">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <views:ProductView DataContext="{Binding ProductViewModel}"/>
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding CurrentView}" Value="Cart">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <views:CartView DataContext="{Binding CartViewModel}"/>
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding CurrentView}" Value="Orders">
-                            <Setter Property="Content">
-                                <Setter.Value>
-                                    <views:OrderView DataContext="{Binding OrderViewModel}"/>
-                                </Setter.Value>
-                            </Setter>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ContentControl.Style>
-        </ContentControl>
+        <Grid Grid.Row="1">
+            <!-- ProductView -->
+            <views:ProductView DataContext="{Binding ProductViewModel}">
+                <views:ProductView.Style>
+                    <Style TargetType="views:ProductView">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.CurrentView, RelativeSource={RelativeSource AncestorType=Window}}" Value="Products">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:ProductView.Style>
+            </views:ProductView>
+
+            <!-- CartView -->
+            <views:CartView DataContext="{Binding CartViewModel}">
+                <views:CartView.Style>
+                    <Style TargetType="views:CartView">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.CurrentView, RelativeSource={RelativeSource AncestorType=Window}}" Value="Cart">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:CartView.Style>
+            </views:CartView>
+
+            <!-- OrderView -->
+            <views:OrderView DataContext="{Binding OrderViewModel}">
+                <views:OrderView.Style>
+                    <Style TargetType="views:OrderView">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.CurrentView, RelativeSource={RelativeSource AncestorType=Window}}" Value="Orders">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </views:OrderView.Style>
+            </views:OrderView>
+        </Grid>
     </Grid>
 </Window>

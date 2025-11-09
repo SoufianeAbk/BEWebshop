@@ -1,6 +1,7 @@
 ﻿using BEWebshop.Data;
 using BEWebshop.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Windows;
 
 namespace BEWebshop.Services
 {
@@ -13,20 +14,27 @@ namespace BEWebshop.Services
                 // Ensure database is created
                 context.Database.EnsureCreated();
 
-                // Check if we need to seed data
+                // Check if we need to seed data (only check categories)
                 if (!context.Categories.Any())
                 {
                     SeedData(context);
+                }
+                else
+                {
+                    // Log existing data
+                    var productCount = context.Products.Count();
+                    var categoryCount = context.Categories.Count();
+                    System.Diagnostics.Debug.WriteLine($"Database already initialized: {categoryCount} categories, {productCount} products");
                 }
             }
             catch (Exception ex)
             {
                 // Log or handle the error
-                System.Windows.MessageBox.Show(
+                MessageBox.Show(
                     $"Database initialization failed: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}",
                     "Database Error",
-                    System.Windows.MessageBoxButton.OK,
-                    System.Windows.MessageBoxImage.Error);
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 throw;
             }
         }
@@ -44,6 +52,8 @@ namespace BEWebshop.Services
 
             context.Categories.AddRange(categories);
             context.SaveChanges();
+
+            System.Diagnostics.Debug.WriteLine($"Seeded {categories.Count} categories");
 
             // Seed Products - 5 products per category (20 total)
             var products = new List<Product>
@@ -219,6 +229,9 @@ namespace BEWebshop.Services
 
             context.Products.AddRange(products);
             context.SaveChanges();
+
+            System.Diagnostics.Debug.WriteLine($"Seeded {products.Count} products");
+            System.Diagnostics.Debug.WriteLine($"Database initialization complete: 4 categories, 20 products");
         }
     }
 }
