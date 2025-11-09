@@ -22,6 +22,8 @@ namespace BEWebshop.ViewModels
             FilterByStatusCommand = new RelayCommand(async _ => await FilterByStatusAsync());
             UpdateOrderStatusCommand = new RelayCommand(async param => await UpdateOrderStatusAsync(param), _ => SelectedOrder != null);
             CancelOrderCommand = new RelayCommand(async _ => await CancelOrderAsync(), _ => SelectedOrder != null);
+            DeleteOrderCommand = new RelayCommand(async _ => await DeleteOrderAsync(), _ => SelectedOrder != null);
+            DeleteAllOrdersCommand = new RelayCommand(async _ => await DeleteAllOrdersAsync());
             ViewOrderDetailsCommand = new RelayCommand(ViewOrderDetails, _ => SelectedOrder != null);
 
             _ = LoadOrdersAsync();
@@ -49,6 +51,8 @@ namespace BEWebshop.ViewModels
         public ICommand FilterByStatusCommand { get; }
         public ICommand UpdateOrderStatusCommand { get; }
         public ICommand CancelOrderCommand { get; }
+        public ICommand DeleteOrderCommand { get; }
+        public ICommand DeleteAllOrdersCommand { get; }
         public ICommand ViewOrderDetailsCommand { get; }
 
         public async Task LoadOrdersAsync()
@@ -131,6 +135,75 @@ namespace BEWebshop.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Error cancelling order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteOrderAsync()
+        {
+            if (SelectedOrder == null) return;
+
+            try
+            {
+                var result = MessageBox.Show(
+                    $"Permanently delete order {SelectedOrder.Id}?\n\nThis action cannot be undone.",
+                    "Confirm Delete",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    var success = await _orderController.DeleteOrderAsync(SelectedOrder.Id);
+                    if (success)
+                    {
+                        MessageBox.Show("Order deleted successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        await LoadOrdersAsync();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not delete order.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting order: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task DeleteAllOrdersAsync()
+        {
+            if (Orders.Count == 0)
+            {
+                MessageBox.Show("No orders to delete.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                var result = MessageBox.Show(
+                    $"Permanently delete ALL {Orders.Count} orders?\n\nThis action cannot be undone.",
+                    "Confirm Delete All",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    int deletedCount = 0;
+                    foreach (var order in Orders.ToList())
+                    {
+                        if (await _orderController.DeleteOrderAsync(order.Id))
+                        {
+                            deletedCount++;
+                        }
+                    }
+
+                    MessageBox.Show($"Deleted {deletedCount} orders successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await LoadOrdersAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting orders: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

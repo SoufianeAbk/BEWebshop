@@ -51,7 +51,7 @@
                 <DataGridTextColumn Header="Email" Binding="{Binding CustomerEmail}" Width="200"/>
                 <DataGridTextColumn Header="Total" Binding="{Binding TotalAmount, StringFormat=€{0:F2}}" Width="100"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                <DataGridTemplateColumn Header="Actions" Width="250">
+                <DataGridTemplateColumn Header="Actions" Width="350">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
@@ -59,6 +59,8 @@
                                         Width="90" Margin="2" Padding="5"/>
                                 <Button Content="Cancel" Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
                                         Width="60" Margin="2" Padding="5"/>
+                                <Button Content="Delete" Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                        Width="60" Margin="2" Padding="5" Background="#E74C3C" Foreground="White"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -66,7 +68,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!-- Order Details Section -->
+        <!-- Order Management Section -->
         <Border Grid.Row="3" BorderBrush="#CCCCCC" BorderThickness="1" Padding="15">
             <Grid>
                 <Grid.RowDefinitions>
@@ -84,6 +86,9 @@
                             CommandParameter="Shipped" Width="80" Height="30" Margin="5"/>
                     <Button Content="Delivered" Command="{Binding UpdateOrderStatusCommand}" 
                             CommandParameter="Delivered" Width="80" Height="30" Margin="5"/>
+                    <Separator Width="1" Margin="10,0"/>
+                    <Button Content="Delete All Orders" Command="{Binding DeleteAllOrdersCommand}" 
+                            Width="120" Height="30" Margin="5" Background="#C0392B" Foreground="White" ToolTip="Permanently delete all displayed orders"/>
                 </StackPanel>
             </Grid>
         </Border>
