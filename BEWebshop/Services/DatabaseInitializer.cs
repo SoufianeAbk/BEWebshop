@@ -41,13 +41,14 @@ namespace BEWebshop.Services
 
         private static void SeedData(WebshopDbContext context)
         {
-            // Seed Categories - 4 categories in English
+            // Seed Categories - 5 categories
             var categories = new List<Category>
             {
                 new Category { Name = "Electronics", Description = "Electronic devices and accessories" },
                 new Category { Name = "Books", Description = "Books and educational materials" },
                 new Category { Name = "Clothing", Description = "Clothing and apparel" },
-                new Category { Name = "Sports", Description = "Sports equipment and gear" }
+                new Category { Name = "Sports", Description = "Sports equipment and gear" },
+                new Category { Name = "Accessoires", Description = "Praktische accessoires en gadgets" }
             };
 
             context.Categories.AddRange(categories);
@@ -55,7 +56,7 @@ namespace BEWebshop.Services
 
             System.Diagnostics.Debug.WriteLine($"Seeded {categories.Count} categories");
 
-            // Seed Products - 5 products per category (20 total)
+            // Seed Products - 5 products per category (25 total)
             var products = new List<Product>
             {
                 // Electronics (CategoryId = 1) - 5 products
@@ -224,6 +225,48 @@ namespace BEWebshop.Services
                     Price = 34.99m,
                     Stock = 100,
                     CategoryId = 4
+                },
+
+                // Accessoires (CategoryId = 5) - 5 products
+                new Product
+                {
+                    Name = "USB-C Kabel",
+                    Description = "Snellaad USB-C kabel 2 meter lang",
+                    Price = 12.99m,
+                    Stock = 150,
+                    CategoryId = 5
+                },
+                new Product
+                {
+                    Name = "Screen Protector",
+                    Description = "Tempered glass screen protector voor smartphones",
+                    Price = 8.99m,
+                    Stock = 200,
+                    CategoryId = 5
+                },
+                new Product
+                {
+                    Name = "Telefoon Hoesje",
+                    Description = "Stoere siliconen telefoon hoesje in meerdere kleuren",
+                    Price = 15.99m,
+                    Stock = 120,
+                    CategoryId = 5
+                },
+                new Product
+                {
+                    Name = "Snellader",
+                    Description = "30W USB-C snellader met twee poorten",
+                    Price = 24.99m,
+                    Stock = 80,
+                    CategoryId = 5
+                },
+                new Product
+                {
+                    Name = "Mouse Pad",
+                    Description = "Ergonomische mouse pad met anti-slip basis",
+                    Price = 11.99m,
+                    Stock = 95,
+                    CategoryId = 5
                 }
             };
 
@@ -231,7 +274,7 @@ namespace BEWebshop.Services
             context.SaveChanges();
 
             System.Diagnostics.Debug.WriteLine($"Seeded {products.Count} products");
-            System.Diagnostics.Debug.WriteLine($"Database initialization complete: 4 categories, 20 products");
+            System.Diagnostics.Debug.WriteLine($"Database initialization complete: 5 categories, 25 products");
         }
     }
 }
