@@ -89,10 +89,15 @@ namespace BEWebshop.ViewModels
                 CartItems = new ObservableCollection<CartItem>(items);
                 CartTotal = await _cartController.GetCartTotalAsync();
                 CartItemCount = await _cartController.GetCartItemCountAsync();
+
+                if (items.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Cart loaded: {items.Count} items, Total: €{CartTotal:F2}");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading cart: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error loading cart: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

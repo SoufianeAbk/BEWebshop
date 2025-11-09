@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using BEWebshop.Data;
+using BEWebshop.Services;
 using BEWebshop.ViewModels;
 
 namespace BEWebshop.ViewModels
@@ -15,6 +16,9 @@ namespace BEWebshop.ViewModels
         {
             _context = new WebshopDbContext();
             _context.Database.EnsureCreated();
+
+            // Initialize database with seed data
+            DatabaseInitializer.Initialize(_context);
 
             ProductViewModel = new ProductViewModel(_context);
             CartViewModel = new CartViewModel(_context);
@@ -58,6 +62,7 @@ namespace BEWebshop.ViewModels
         {
             CurrentViewModel = CartViewModel;
             CurrentView = "Cart";
+            // Force refresh cart data when navigating
             CartViewModel.LoadCartCommand.Execute(null);
         }
 

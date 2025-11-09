@@ -99,6 +99,7 @@ namespace BEWebshop.ViewModels
                 }
 
                 Products = new ObservableCollection<Product>(products);
+                System.Diagnostics.Debug.WriteLine($"Products loaded: {products.Count} products");
             }
             catch (Exception ex)
             {
@@ -133,6 +134,8 @@ namespace BEWebshop.ViewModels
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
+
+                System.Diagnostics.Debug.WriteLine($"Categories loaded: {categories.Count} categories");
             }
             catch (Exception ex)
             {
@@ -157,6 +160,7 @@ namespace BEWebshop.ViewModels
                 var result = await _cartController.AddToCartAsync(SelectedProduct.Id, 1);
                 if (result != null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Product added to cart: {SelectedProduct.Name}");
                     MessageBox.Show($"{SelectedProduct.Name} added to cart!", "Success",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -168,7 +172,7 @@ namespace BEWebshop.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error adding to cart: {ex.Message}", "Error",
+                MessageBox.Show($"Error adding to cart: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
