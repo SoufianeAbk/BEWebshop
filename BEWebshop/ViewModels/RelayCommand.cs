@@ -2,7 +2,6 @@
 
 namespace BEWebshop.ViewModels
 {
-    // Simple RelayCommand implementation
     internal class RelayCommand : ICommand
     {
         private readonly Action<object?> _execute;
