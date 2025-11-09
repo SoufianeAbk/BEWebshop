@@ -20,21 +20,21 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="200"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
             </Grid.ColumnDefinitions>
 
             <TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                     Margin="0,0,10,0" VerticalContentAlignment="Center" Height="30"/>
+                     Margin="0,0,10,0" VerticalContentAlignment="Center" Height="30"
+                     ToolTip="Search products by name or description"/>
             <Button Grid.Column="1" Content="Search" Command="{Binding SearchCommand}" 
                     Width="80" Height="30" Margin="0,0,10,0"/>
 
-            <ComboBox Grid.Column="2" ItemsSource="{Binding Categories}" 
+            <TextBlock Grid.Column="2" Text="Category:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <ComboBox Grid.Column="3" ItemsSource="{Binding Categories}" 
                       SelectedValue="{Binding SelectedCategoryId}" 
                       DisplayMemberPath="Name" SelectedValuePath="Id" 
-                      Height="30" Margin="0,0,10,0"/>
-            <Button Grid.Column="3" Content="Filter" Command="{Binding FilterByCategoryCommand}" 
-                    Width="80" Height="30"/>
+                      Height="30" ToolTip="Filter products by category (automatic)"/>
         </Grid>
 
         <!-- Products DataGrid -->

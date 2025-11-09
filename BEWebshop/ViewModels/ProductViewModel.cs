@@ -55,7 +55,14 @@ namespace BEWebshop.ViewModels
         public int SelectedCategoryId
         {
             get => _selectedCategoryId;
-            set => SetProperty(ref _selectedCategoryId, value);
+            set
+            {
+                if (SetProperty(ref _selectedCategoryId, value))
+                {
+                    // Filtrer automatiquement quand la catégorie change
+                    _ = FilterByCategoryAsync();
+                }
+            }
         }
 
         public string SearchText

@@ -55,22 +55,24 @@ namespace BEWebshop.ViewModels
         {
             CurrentViewModel = ProductViewModel;
             CurrentView = "Products";
-            ProductViewModel.LoadProductsCommand.Execute(null);
+            // Rafraîchir la liste des produits
+            _ = ProductViewModel.LoadProductsAsync();
         }
 
         private void NavigateToCart(object? parameter)
         {
             CurrentViewModel = CartViewModel;
             CurrentView = "Cart";
-            // Force refresh cart data when navigating
-            CartViewModel.LoadCartCommand.Execute(null);
+            // IMPORTANT: Rafraîchir le panier quand on y navigue
+            _ = CartViewModel.LoadCartAsync();
         }
 
         private void NavigateToOrders(object? parameter)
         {
             CurrentViewModel = OrderViewModel;
             CurrentView = "Orders";
-            OrderViewModel.LoadOrdersCommand.Execute(null);
+            // Rafraîchir la liste des commandes
+            _ = OrderViewModel.LoadOrdersAsync();
         }
     }
 }
