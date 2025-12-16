@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36603.0 d17.14
+VisualStudioVersion = 17.14.36603.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BEWebshop", "BEWebshop\BEWebshop.csproj", "{37680DEE-CBEF-4D7E-B51B-08E44BABA1BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BEWebshop.Core", "BEWebshop.Core\BEWebshop.Core.csproj", "{6DBC0B16-44DC-4C6A-9075-26800EF8860B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{37680DEE-CBEF-4D7E-B51B-08E44BABA1BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37680DEE-CBEF-4D7E-B51B-08E44BABA1BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37680DEE-CBEF-4D7E-B51B-08E44BABA1BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DBC0B16-44DC-4C6A-9075-26800EF8860B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DBC0B16-44DC-4C6A-9075-26800EF8860B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DBC0B16-44DC-4C6A-9075-26800EF8860B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DBC0B16-44DC-4C6A-9075-26800EF8860B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
-using BEWebshop.Data;
-using BEWebshop.Services;
+using BEWebshop.Core.Data;
+using BEWebshop.Core.Services;
 using BEWebshop.ViewModels;
 
 namespace BEWebshop.ViewModels
 {
-    internal class MainViewModel : BaseViewModel
+    public class MainViewModel : BaseViewModel
     {
         private readonly WebshopDbContext _context;
         private BaseViewModel? _currentViewModel;

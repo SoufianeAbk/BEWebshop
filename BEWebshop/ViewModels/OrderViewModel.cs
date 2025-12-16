@@ -1,13 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using BEWebshop.Controllers;
-using BEWebshop.Data;
-using BEWebshop.Models;
+using BEWebshop.Core.Controllers;
+using BEWebshop.Core.Data;
+using BEWebshop.Core.Models;
 
 namespace BEWebshop.ViewModels
 {
-    internal class OrderViewModel : BaseViewModel
+    public class OrderViewModel : BaseViewModel
     {
         private readonly OrderController _orderController;
         private ObservableCollection<Order> _orders = new();

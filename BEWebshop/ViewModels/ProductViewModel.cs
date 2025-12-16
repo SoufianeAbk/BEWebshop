@@ -1,13 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using BEWebshop.Controllers;
-using BEWebshop.Data;
-using BEWebshop.Models;
+using BEWebshop.Core.Controllers;
+using BEWebshop.Core.Data;
+using BEWebshop.Core.Models;
 
 namespace BEWebshop.ViewModels
 {
-    internal class ProductViewModel : BaseViewModel
+    public class ProductViewModel : BaseViewModel
     {
         private readonly ProductController _productController;
         private readonly CategoryController _categoryController;
