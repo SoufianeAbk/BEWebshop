@@ -2,7 +2,7 @@
 using BEWebshop.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BEWebshop.Controllers
+namespace BEWebshop.Core.Controllers
 {
     public class ProductController
     {
