@@ -1,9 +1,10 @@
 ﻿using BEWebshop.Core.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BEWebshop.Core.Data
 {
-    public class WebshopDbContext : DbContext
+    public class WebshopDbContext : IdentityDbContext<User>
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -56,8 +57,16 @@ namespace BEWebshop.Core.Data
                 entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Status).HasMaxLength(50);
 
+                // Configure relationship with User
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired(false);
+
                 // Index on OrderDate for better query performance
                 entity.HasIndex(e => e.OrderDate);
+                entity.HasIndex(e => e.UserId);
             });
 
             // Configure CartItem entity
@@ -83,9 +92,6 @@ namespace BEWebshop.Core.Data
                 entity.HasIndex(e => e.ProductId);
                 entity.HasIndex(e => e.OrderId);
             });
-
-            // NOTE: Seed data is now handled by DatabaseInitializer.Initialize()
-            // This prevents issues with duplicate data and provides better control
         }
     }
 }
