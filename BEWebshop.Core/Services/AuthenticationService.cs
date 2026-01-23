@@ -7,13 +7,11 @@ namespace BEWebshop.Core.Services
     public class AuthenticationService
     {
         private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private User? _currentUser;
 
-        public AuthenticationService(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AuthenticationService(UserManager<User> userManager)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
         }
 
         public User? CurrentUser => _currentUser;
@@ -47,9 +45,10 @@ namespace BEWebshop.Core.Services
                 return (false, "Invalid email or password");
             }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
+            // Verify password using UserManager (geen SignInManager nodig)
+            var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
 
-            if (result.Succeeded)
+            if (isPasswordValid)
             {
                 _currentUser = user;
                 return (true, "Login successful");

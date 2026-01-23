@@ -51,7 +51,7 @@ namespace BEWebshop
                 options.UseSqlite("Data Source=webshop.db")
                        .UseLazyLoadingProxies());
 
-            // Register Identity
+            // Register Identity (zonder SignInManager voor WPF)
             services.AddIdentity<User, IdentityRole>(options =>
             {
                 // Password settings
@@ -67,7 +67,7 @@ namespace BEWebshop
             .AddEntityFrameworkStores<WebshopDbContext>()
             .AddDefaultTokenProviders();
 
-            // Register services
+            // Register services (AuthenticationService krijgt alleen UserManager)
             services.AddScoped<AuthenticationService>();
         }
     }

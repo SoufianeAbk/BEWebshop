@@ -7,204 +7,183 @@ namespace BEWebshop.Core.Controllers
     public class OrderController
     {
         private readonly WebshopDbContext _context;
+        private readonly CartController _cartController;
 
         public OrderController(WebshopDbContext context)
         {
             _context = context;
+            _cartController = new CartController(context);
         }
 
-        // Create order from cart
         public async Task<Order?> CreateOrderFromCartAsync(string customerName, string customerEmail, string shippingAddress)
         {
-            // Get cart items
-            var cartItems = await _context.CartItems
-                .Include(ci => ci.Product)
-                .Where(ci => ci.OrderId == null)
-                .ToListAsync();
-
-            if (cartItems.Count == 0)
-                return null;
-
-            // Validate stock availability
-            foreach (var item in cartItems)
+            try
             {
-                if (item.Product == null || item.Product.Stock < item.Quantity)
-                    return null; // Insufficient stock
-            }
+                var cartItems = await _cartController.GetCartItemsAsync();
+                if (cartItems.Count == 0)
+                    return null;
 
-            // Calculate total
-            decimal total = cartItems.Sum(ci => ci.Quantity * ci.Price);
+                // Validate stock availability
+                var (isValid, _) = await _cartController.ValidateCartAsync();
+                if (!isValid)
+                    return null;
 
-            // Create order
-            var order = new Order
-            {
-                OrderDate = DateTime.Now,
-                CustomerName = customerName,
-                CustomerEmail = customerEmail,
-                ShippingAddress = shippingAddress,
-                TotalAmount = total,
-                Status = "Pending"
-            };
-
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            // Update cart items with order ID
-            foreach (var item in cartItems)
-            {
-                item.OrderId = order.Id;
-
-                // Reduce product stock
-                if (item.Product != null)
+                var order = new Order
                 {
-                    item.Product.Stock -= item.Quantity;
-                }
-            }
+                    OrderDate = DateTime.Now,
+                    CustomerName = customerName,
+                    CustomerEmail = customerEmail,
+                    ShippingAddress = shippingAddress,
+                    Status = "Pending",
+                    TotalAmount = await _cartController.GetCartTotalAsync()
+                };
 
-            await _context.SaveChangesAsync();
-            return order;
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Associate cart items with order and reduce stock
+                foreach (var item in cartItems)
+                {
+                    item.OrderId = order.Id;
+
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.Stock -= item.Quantity;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine($"Order created: ID={order.Id}, Total=€{order.TotalAmount:F2}");
+                return order;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error creating order: {ex.Message}");
+                throw;
+            }
         }
 
-        // Get all orders
         public async Task<List<Order>> GetAllOrdersAsync()
         {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            try
+            {
+                return await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading orders: {ex.Message}");
+                return new List<Order>();
+            }
         }
 
-        // Get order by ID
-        public async Task<Order?> GetOrderByIdAsync(int id)
-        {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .ThenInclude(p => p.Category)
-                .FirstOrDefaultAsync(o => o.Id == id);
-        }
-
-        // Get orders by customer email
-        public async Task<List<Order>> GetOrdersByCustomerEmailAsync(string email)
-        {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .Where(o => o.CustomerEmail == email)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
-        }
-
-        // Get orders by status
-        public async Task<List<Order>> GetOrdersByStatusAsync(string status)
-        {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .Where(o => o.Status == status)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
-        }
-
-        // Get orders by date range
-        public async Task<List<Order>> GetOrdersByDateRangeAsync(DateTime startDate, DateTime endDate)
-        {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
-        }
-
-        // Update order status
         public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus)
         {
-            var order = await _context.Orders.FindAsync(orderId);
-            if (order == null)
-                return false;
+            try
+            {
+                var order = await _context.Orders.FindAsync(orderId);
+                if (order == null)
+                    return false;
 
-            order.Status = newStatus;
-            await _context.SaveChangesAsync();
-            return true;
+                order.Status = newStatus;
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine($"Order {orderId} status updated to {newStatus}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating order status: {ex.Message}");
+                return false;
+            }
         }
 
-        // Cancel order
         public async Task<bool> CancelOrderAsync(int orderId)
         {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .FirstOrDefaultAsync(o => o.Id == orderId);
-
-            if (order == null || order.Status == "Delivered" || order.Status == "Cancelled")
-                return false;
-
-            // Restore product stock
-            foreach (var item in order.OrderItems)
+            try
             {
-                if (item.Product != null)
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                    return false;
+
+                // Restore stock
+                foreach (var item in order.OrderItems)
                 {
-                    item.Product.Stock += item.Quantity;
+                    if (item.Product != null)
+                    {
+                        item.Product.Stock += item.Quantity;
+                    }
                 }
+
+                order.Status = "Cancelled";
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine($"Order {orderId} cancelled, stock restored");
+                return true;
             }
-
-            order.Status = "Cancelled";
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        // Get order statistics
-        public async Task<(int TotalOrders, decimal TotalRevenue, decimal AverageOrderValue)> GetOrderStatisticsAsync()
-        {
-            var orders = await _context.Orders
-                .Where(o => o.Status != "Cancelled")
-                .ToListAsync();
-
-            int totalOrders = orders.Count;
-            decimal totalRevenue = orders.Sum(o => o.TotalAmount);
-            decimal averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-            return (totalOrders, totalRevenue, averageOrderValue);
-        }
-
-        // Get recent orders
-        public async Task<List<Order>> GetRecentOrdersAsync(int count = 10)
-        {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-                .OrderByDescending(o => o.OrderDate)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        // Get pending orders count
-        public async Task<int> GetPendingOrdersCountAsync()
-        {
-            return await _context.Orders.CountAsync(o => o.Status == "Pending");
-        }
-
-        // Check if order exists
-        public async Task<bool> OrderExistsAsync(int id)
-        {
-            return await _context.Orders.AnyAsync(o => o.Id == id);
-        }
-
-        // Delete order (admin only - careful with this)
-        public async Task<bool> DeleteOrderAsync(int id)
-        {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null)
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error cancelling order: {ex.Message}");
                 return false;
+            }
+        }
 
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
-            return true;
+        public async Task<bool> DeleteOrderAsync(int orderId)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order == null)
+                    return false;
+
+                _context.CartItems.RemoveRange(order.OrderItems);
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine($"Order {orderId} deleted");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting order: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAllOrdersAsync()
+        {
+            try
+            {
+                var orders = await _context.Orders.Include(o => o.OrderItems).ToListAsync();
+
+                foreach (var order in orders)
+                {
+                    _context.CartItems.RemoveRange(order.OrderItems);
+                }
+
+                _context.Orders.RemoveRange(orders);
+                await _context.SaveChangesAsync();
+
+                System.Diagnostics.Debug.WriteLine("All orders deleted");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting all orders: {ex.Message}");
+                return false;
+            }
         }
     }
 }
