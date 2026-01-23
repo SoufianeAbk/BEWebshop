@@ -5,8 +5,10 @@ using BEWebshop.Core.Data;
 using BEWebshop.Core.Models;
 using BEWebshop.Core.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BEWebshop
 {
@@ -51,8 +53,20 @@ namespace BEWebshop
                 options.UseSqlite("Data Source=webshop.db")
                        .UseLazyLoadingProxies());
 
-            // Register Identity (zonder SignInManager voor WPF)
-            services.AddIdentity<User, IdentityRole>(options =>
+            // Manually register Identity components for WPF
+            services.AddScoped<UserManager<User>>();
+            services.AddScoped<IUserStore<User>, UserStore<User, IdentityRole, WebshopDbContext>>();
+            services.AddScoped<IRoleStore<IdentityRole>, RoleStore<IdentityRole, WebshopDbContext>>();
+
+            // Password hasher
+            services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+            // User validator
+            services.AddScoped<IUserValidator<User>, UserValidator<User>>();
+            services.AddScoped<IPasswordValidator<User>, PasswordValidator<User>>();
+
+            // Configure Identity options
+            services.Configure<IdentityOptions>(options =>
             {
                 // Password settings
                 options.Password.RequireDigit = true;
@@ -63,11 +77,9 @@ namespace BEWebshop
 
                 // User settings
                 options.User.RequireUniqueEmail = true;
-            })
-            .AddEntityFrameworkStores<WebshopDbContext>()
-            .AddDefaultTokenProviders();
+            });
 
-            // Register services (AuthenticationService krijgt alleen UserManager)
+            // Register services
             services.AddScoped<AuthenticationService>();
         }
     }

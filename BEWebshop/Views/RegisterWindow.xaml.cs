@@ -16,11 +16,14 @@ namespace BEWebshop
 
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
+            var firstName = FirstNameTextBox.Text;
+            var lastName = LastNameTextBox.Text;
             var email = EmailTextBox.Text;
             var password = PasswordBox.Password;
             var confirmPassword = ConfirmPasswordBox.Password;
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) ||
+                string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 MessageBox.Show("Please fill in all fields", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -32,7 +35,7 @@ namespace BEWebshop
                 return;
             }
 
-            var (success, message) = await _authService.RegisterAsync(email, password);
+            var (success, message) = await _authService.RegisterAsync(email, password, firstName, lastName);
 
             if (success)
             {

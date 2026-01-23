@@ -82,6 +82,25 @@ namespace BEWebshop.Core.Controllers
             }
         }
 
+        // ✅ NEW METHOD — Filter orders by status
+        public async Task<List<Order>> GetOrdersByStatusAsync(string status)
+        {
+            try
+            {
+                return await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .Where(o => o.Status == status)
+                    .OrderByDescending(o => o.OrderDate)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading orders by status: {ex.Message}");
+                return new List<Order>();
+            }
+        }
+
         public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus)
         {
             try
