@@ -5,7 +5,6 @@ namespace BEWebshop.Core.Models
     public class Order
     {
         public int Id { get; set; }
-
         public DateTime OrderDate { get; set; }
 
         [Required]
@@ -25,6 +24,10 @@ namespace BEWebshop.Core.Models
 
         [MaxLength(50)]
         public string Status { get; set; } = "Pending";
+
+        // User relationship properties
+        public string? UserId { get; set; }
+        public virtual User? User { get; set; }
 
         // Navigation property
         public virtual ICollection<CartItem> OrderItems { get; set; } = new List<CartItem>();
