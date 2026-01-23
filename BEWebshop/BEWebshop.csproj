@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net9.0-windows</TargetFramework>
@@ -7,7 +6,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
-
 	<!-- NuGet packages -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
@@ -17,17 +15,13 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
 		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
 	</ItemGroup>
-
 	<!-- Project reference -->
 	<ItemGroup>
 		<ProjectReference Include="..\BEWebshop.Core\BEWebshop.Core.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\BEWebshop.Core\BEWebshop.Core.csproj" />
-	</ItemGroup>
-
 </Project>
