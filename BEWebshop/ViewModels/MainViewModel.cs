@@ -36,6 +36,9 @@ namespace BEWebshop.ViewModels
             NavigateToProductsCommand = new RelayCommand(NavigateToProducts);
             NavigateToCartCommand = new RelayCommand(NavigateToCart);
             NavigateToOrdersCommand = new RelayCommand(NavigateToOrders);
+
+            // IMPORTANT: Initialize the view - load products immediately
+            InitializeAsync();
         }
 
         public ProductViewModel ProductViewModel { get; }
@@ -64,11 +67,25 @@ namespace BEWebshop.ViewModels
         public ICommand NavigateToCartCommand { get; }
         public ICommand NavigateToOrdersCommand { get; }
 
+        private async void InitializeAsync()
+        {
+            try
+            {
+                // Load products when the application starts
+                await ProductViewModel.LoadProductsAsync();
+                System.Diagnostics.Debug.WriteLine("Initial products loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing view: {ex.Message}");
+            }
+        }
+
         private void NavigateToProducts(object? parameter)
         {
             CurrentViewModel = ProductViewModel;
             CurrentView = "Products";
-            // Rafraîchir la liste des produits
+            // Refresh products list
             _ = ProductViewModel.LoadProductsAsync();
         }
 
@@ -76,7 +93,7 @@ namespace BEWebshop.ViewModels
         {
             CurrentViewModel = CartViewModel;
             CurrentView = "Cart";
-            // IMPORTANT: Rafraîchir le panier quand on y navigue
+            // IMPORTANT: Refresh cart when navigating to it
             _ = CartViewModel.LoadCartAsync();
         }
 
@@ -84,7 +101,7 @@ namespace BEWebshop.ViewModels
         {
             CurrentViewModel = OrderViewModel;
             CurrentView = "Orders";
-            // Rafraîchir la liste des commandes
+            // Refresh orders list
             _ = OrderViewModel.LoadOrdersAsync();
         }
     }

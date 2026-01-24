@@ -17,6 +17,7 @@ namespace BEWebshop.ViewModels
         private Product? _selectedProduct;
         private int _selectedCategoryId;
         private string _searchText = string.Empty;
+        private bool _isInitialized = false;
 
         public ProductViewModel(WebshopDbContext context)
         {
@@ -30,8 +31,7 @@ namespace BEWebshop.ViewModels
             SearchCommand = new RelayCommand(async _ => await SearchProductsAsync());
             FilterByCategoryCommand = new RelayCommand(async _ => await FilterByCategoryAsync());
 
-            // Load data synchronously to ensure it's available when view is shown
-            LoadInitialData();
+            // Don't load data in constructor anymore - let MainViewModel handle it
         }
 
         public ObservableCollection<Product> Products
@@ -59,8 +59,11 @@ namespace BEWebshop.ViewModels
             {
                 if (SetProperty(ref _selectedCategoryId, value))
                 {
-                    // Filtrer automatiquement quand la catégorie change
-                    _ = FilterByCategoryAsync();
+                    // Filter automatically when category changes (only if already initialized)
+                    if (_isInitialized)
+                    {
+                        _ = FilterByCategoryAsync();
+                    }
                 }
             }
         }
@@ -77,39 +80,42 @@ namespace BEWebshop.ViewModels
         public ICommand SearchCommand { get; }
         public ICommand FilterByCategoryCommand { get; }
 
-        private async void LoadInitialData()
-        {
-            try
-            {
-                await LoadCategoriesAsync();
-                await LoadProductsAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading initial data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         public async Task LoadProductsAsync()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("Starting to load products...");
+
+                // Load categories first if not already loaded
+                if (Categories.Count == 0)
+                {
+                    await LoadCategoriesAsync();
+                }
+
                 var products = await _productController.GetAllProductsAsync();
 
                 if (products == null || products.Count == 0)
                 {
+                    System.Diagnostics.Debug.WriteLine("WARNING: No products found in database!");
                     MessageBox.Show(
                         "No products found in the database. The database may not be properly initialized.",
                         "Information",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
+                    Products = new ObservableCollection<Product>();
+                }
+                else
+                {
+                    Products = new ObservableCollection<Product>(products);
+                    System.Diagnostics.Debug.WriteLine($"Successfully loaded {products.Count} products");
                 }
 
-                Products = new ObservableCollection<Product>(products);
-                System.Diagnostics.Debug.WriteLine($"Products loaded: {products.Count} products");
+                _isInitialized = true;
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"ERROR loading products: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 MessageBox.Show($"Error loading products: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -119,6 +125,8 @@ namespace BEWebshop.ViewModels
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("Starting to load categories...");
+
                 var categories = await _categoryController.GetAllCategoriesAsync();
 
                 // Create a new list with "All Categories" option at the beginning
@@ -126,26 +134,25 @@ namespace BEWebshop.ViewModels
                 {
                     new Category { Id = 0, Name = "All Categories", Description = "Show all products" }
                 };
-                categoriesWithAll.AddRange(categories);
+
+                if (categories != null && categories.Count > 0)
+                {
+                    categoriesWithAll.AddRange(categories);
+                    System.Diagnostics.Debug.WriteLine($"Successfully loaded {categories.Count} categories");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("WARNING: No categories found in database!");
+                }
 
                 Categories = new ObservableCollection<Category>(categoriesWithAll);
 
                 // Set default selection to "All Categories"
                 SelectedCategoryId = 0;
-
-                if (categories == null || categories.Count == 0)
-                {
-                    MessageBox.Show(
-                        "No categories found in the database. The database may not be properly initialized.",
-                        "Information",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                }
-
-                System.Diagnostics.Debug.WriteLine($"Categories loaded: {categories.Count} categories");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"ERROR loading categories: {ex.Message}");
                 MessageBox.Show($"Error loading categories: {ex.Message}\n\nInner Exception: {ex.InnerException?.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }

@@ -24,37 +24,71 @@ namespace BEWebshop
         {
             base.OnStartup(e);
 
-            // Initialize SQLite
-            SQLitePCL.Batteries.Init();
-
-            // Configure dependency injection
-            var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
-            ServiceProvider = serviceCollection.BuildServiceProvider();
-
-            // Initialize the database with migrations
-            using (var scope = ServiceProvider.CreateScope())
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+                System.Diagnostics.Debug.WriteLine("Application starting...");
 
-                // Use Migrate() instead of EnsureCreated() to properly create Identity tables
-                context.Database.Migrate();
+                // Initialize SQLite
+                SQLitePCL.Batteries.Init();
+                System.Diagnostics.Debug.WriteLine("SQLite initialized");
 
-                DatabaseInitializer.Initialize(context);
+                // Configure dependency injection
+                var serviceCollection = new ServiceCollection();
+                ConfigureServices(serviceCollection);
+                ServiceProvider = serviceCollection.BuildServiceProvider();
+                System.Diagnostics.Debug.WriteLine("Services configured");
+
+                // Initialize the database with migrations
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+
+                    // Use Migrate() instead of EnsureCreated() to properly create Identity tables
+                    context.Database.Migrate();
+
+                    DatabaseInitializer.Initialize(context);
+                    System.Diagnostics.Debug.WriteLine("Database initialized");
+                }
+
+                // IMPORTANT: Set ShutdownMode to OnExplicitShutdown to prevent app from closing when login window closes
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+                // Show login window
+                var loginWindow = new LoginWindow();
+                System.Diagnostics.Debug.WriteLine("Login window created");
+
+                var loginResult = loginWindow.ShowDialog();
+                System.Diagnostics.Debug.WriteLine($"Login dialog result: {loginResult}");
+
+                if (loginResult == true)
+                {
+                    System.Diagnostics.Debug.WriteLine("Login successful, creating main window...");
+
+                    // Show main window after successful login
+                    var mainWindow = new MainWindow();
+
+                    // CRITICAL: Set as MainWindow BEFORE showing it
+                    MainWindow = mainWindow;
+
+                    // Now set ShutdownMode to close when MainWindow closes
+                    ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+                    System.Diagnostics.Debug.WriteLine("Main window created, showing...");
+                    mainWindow.Show();
+                    System.Diagnostics.Debug.WriteLine("Main window shown");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Login cancelled, shutting down...");
+                    // User cancelled login, exit application
+                    Shutdown();
+                }
             }
-
-            // Show login window
-            var loginWindow = new LoginWindow();
-            if (loginWindow.ShowDialog() == true)
+            catch (Exception ex)
             {
-                // Show main window after successful login
-                var mainWindow = new MainWindow();
-                MainWindow = mainWindow;
-                mainWindow.Show();
-            }
-            else
-            {
-                // User cancelled login, exit application
+                System.Diagnostics.Debug.WriteLine($"FATAL ERROR in OnStartup: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                MessageBox.Show($"Application startup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
         }
