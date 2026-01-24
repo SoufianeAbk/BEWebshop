@@ -1,17 +1,20 @@
 ﻿using BEWebshop.Core.Data;
 using BEWebshop.Core.Models;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BEWebshop.Core.Services
 {
     public class AuthenticationService
     {
-        private readonly UserManager<User> _userManager;
+        private readonly IServiceProvider _serviceProvider;
         private User? _currentUser;
 
-        public AuthenticationService(UserManager<User> userManager)
+        public AuthenticationService(IServiceProvider serviceProvider)
         {
-            _userManager = userManager;
+            _serviceProvider = serviceProvider;
         }
 
         public User? CurrentUser => _currentUser;
@@ -19,42 +22,71 @@ namespace BEWebshop.Core.Services
 
         public async Task<(bool Success, string Message)> RegisterAsync(string email, string password, string firstName, string lastName)
         {
-            var user = new User
+            try
             {
-                UserName = email,
-                Email = email,
-                FirstName = firstName,
-                LastName = lastName
-            };
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
 
-            var result = await _userManager.CreateAsync(user, password);
+                // Check if user already exists
+                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (existingUser != null)
+                {
+                    return (false, "Email already registered");
+                }
 
-            if (result.Succeeded)
-            {
+                // Create new user
+                var user = new User
+                {
+                    UserName = email,
+                    Email = email,
+                    NormalizedEmail = email.ToUpper(),
+                    NormalizedUserName = email.ToUpper(),
+                    FirstName = firstName,
+                    LastName = lastName,
+                    EmailConfirmed = true,
+                    SecurityStamp = Guid.NewGuid().ToString()
+                };
+
+                // Hash password
+                user.PasswordHash = HashPassword(password);
+
+                context.Users.Add(user);
+                await context.SaveChangesAsync();
+
                 return (true, "Registration successful");
             }
-
-            return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+            catch (Exception ex)
+            {
+                return (false, $"Registration failed: {ex.Message}");
+            }
         }
 
         public async Task<(bool Success, string Message)> LoginAsync(string email, string password)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            try
             {
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (user == null)
+                {
+                    return (false, "Invalid email or password");
+                }
+
+                // Verify password
+                if (VerifyPassword(password, user.PasswordHash ?? ""))
+                {
+                    _currentUser = user;
+                    return (true, "Login successful");
+                }
+
                 return (false, "Invalid email or password");
             }
-
-            // Verify password using UserManager (geen SignInManager nodig)
-            var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
-
-            if (isPasswordValid)
+            catch (Exception ex)
             {
-                _currentUser = user;
-                return (true, "Login successful");
+                return (false, $"Login failed: {ex.Message}");
             }
-
-            return (false, "Invalid email or password");
         }
 
         public void Logout()
@@ -67,8 +99,47 @@ namespace BEWebshop.Core.Services
             if (_currentUser == null)
                 return false;
 
-            var result = await _userManager.ChangePasswordAsync(_currentUser, currentPassword, newPassword);
-            return result.Succeeded;
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+
+                // Verify current password
+                if (!VerifyPassword(currentPassword, _currentUser.PasswordHash ?? ""))
+                    return false;
+
+                // Update password
+                _currentUser.PasswordHash = HashPassword(newPassword);
+
+                // Update in database
+                var dbUser = await context.Users.FindAsync(_currentUser.Id);
+                if (dbUser != null)
+                {
+                    dbUser.PasswordHash = _currentUser.PasswordHash;
+                    await context.SaveChangesAsync();
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            var hashOfInput = HashPassword(password);
+            return hashOfInput == hashedPassword;
         }
     }
 }

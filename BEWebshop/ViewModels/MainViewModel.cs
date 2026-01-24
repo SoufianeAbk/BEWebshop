@@ -3,28 +3,35 @@ using System.Windows.Input;
 using BEWebshop.Core.Data;
 using BEWebshop.Core.Services;
 using BEWebshop.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BEWebshop.ViewModels
 {
     public class MainViewModel : BaseViewModel
     {
-        private readonly WebshopDbContext _context;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly AuthenticationService _authService;
         private BaseViewModel? _currentViewModel;
         private string _currentView = "Products";
+        private string _currentUserName = string.Empty;
 
-        public MainViewModel()
+        public MainViewModel(IServiceProvider serviceProvider, AuthenticationService authService)
         {
-            _context = new WebshopDbContext();
-            _context.Database.EnsureCreated();
+            _serviceProvider = serviceProvider;
+            _authService = authService;
 
-            // Initialize database with seed data
-            DatabaseInitializer.Initialize(_context);
-
-            ProductViewModel = new ProductViewModel(_context);
-            CartViewModel = new CartViewModel(_context);
-            OrderViewModel = new OrderViewModel(_context);
+            // Get ViewModels from DI
+            ProductViewModel = _serviceProvider.GetRequiredService<ProductViewModel>();
+            CartViewModel = _serviceProvider.GetRequiredService<CartViewModel>();
+            OrderViewModel = _serviceProvider.GetRequiredService<OrderViewModel>();
 
             _currentViewModel = ProductViewModel;
+
+            // Set current user name
+            if (_authService.CurrentUser != null)
+            {
+                CurrentUserName = $"Welcome, {_authService.CurrentUser.FirstName} {_authService.CurrentUser.LastName}";
+            }
 
             NavigateToProductsCommand = new RelayCommand(NavigateToProducts);
             NavigateToCartCommand = new RelayCommand(NavigateToCart);
@@ -45,6 +52,12 @@ namespace BEWebshop.ViewModels
         {
             get => _currentView;
             set => SetProperty(ref _currentView, value);
+        }
+
+        public string CurrentUserName
+        {
+            get => _currentUserName;
+            set => SetProperty(ref _currentUserName, value);
         }
 
         public ICommand NavigateToProductsCommand { get; }

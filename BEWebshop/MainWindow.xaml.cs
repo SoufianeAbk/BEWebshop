@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using BEWebshop.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BEWebshop
 {
@@ -11,7 +12,8 @@ namespace BEWebshop
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            // Get MainViewModel from DI container
+            DataContext = App.ServiceProvider.GetRequiredService<MainViewModel>();
         }
     }
 }

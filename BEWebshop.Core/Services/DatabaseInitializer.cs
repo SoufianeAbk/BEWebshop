@@ -10,9 +10,6 @@ namespace BEWebshop.Core.Services
         {
             try
             {
-                // Ensure database is created
-                context.Database.EnsureCreated();
-
                 // Check if we need to seed data (only check categories)
                 if (!context.Categories.Any())
                 {
@@ -27,7 +24,7 @@ namespace BEWebshop.Core.Services
                 }
             }
             catch (Exception ex)
-            { 
+            {
                 System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
 

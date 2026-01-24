@@ -4,6 +4,7 @@ using System.Windows;
 using BEWebshop.Core.Data;
 using BEWebshop.Core.Models;
 using BEWebshop.Core.Services;
+using BEWebshop.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -31,12 +32,24 @@ namespace BEWebshop
             ConfigureServices(serviceCollection);
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
+            // Initialize the database with migrations
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<WebshopDbContext>();
+
+                // Use Migrate() instead of EnsureCreated() to properly create Identity tables
+                context.Database.Migrate();
+
+                DatabaseInitializer.Initialize(context);
+            }
+
             // Show login window
             var loginWindow = new LoginWindow();
             if (loginWindow.ShowDialog() == true)
             {
                 // Show main window after successful login
                 var mainWindow = new MainWindow();
+                MainWindow = mainWindow;
                 mainWindow.Show();
             }
             else
@@ -48,7 +61,7 @@ namespace BEWebshop
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // Register DbContext
+            // Register DbContext as Scoped
             services.AddDbContext<WebshopDbContext>(options =>
                 options.UseSqlite("Data Source=webshop.db")
                        .UseLazyLoadingProxies());
@@ -72,15 +85,20 @@ namespace BEWebshop
                 options.Password.RequireDigit = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequireUppercase = true;
-                options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;
 
                 // User settings
                 options.User.RequireUniqueEmail = true;
             });
 
-            // Register services
-            services.AddScoped<AuthenticationService>();
+            // Register AuthenticationService as Singleton so CurrentUser persists
+            services.AddSingleton<AuthenticationService>();
+
+            // Register ViewModels
+            services.AddTransient<MainViewModel>();
+            services.AddTransient<ProductViewModel>();
+            services.AddTransient<CartViewModel>();
+            services.AddTransient<OrderViewModel>();
         }
     }
 }
